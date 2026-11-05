@@ -1,0 +1,80 @@
+BT Code 1 : 
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract BankAccount {
+
+    mapping(address => uint256) private balances;
+
+    // Deposit Ether
+    function deposit() public payable {
+        require(msg.value > 0, "Deposit amount must be greater than zero");
+
+        balances[msg.sender] += msg.value;
+    }
+
+    // Withdraw Ether
+    function withdraw(uint256 amount) public {
+        require(amount > 0, "Amount must be greater than zero");
+        require(balances[msg.sender] >= amount, "Insufficient balance");
+
+        balances[msg.sender] -= amount;
+
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
+        require(success, "Transfer failed");
+    }
+
+    // Check account balance
+    function getBalance() public view returns (uint256) {
+        return balances[msg.sender];
+    }
+}
+
+
+---------------------------------------------------- 
+
+BT Code 2 : 
+
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract StudentData {
+
+    // Structure to store student details
+    struct Student {
+        uint256 rollNo;
+        string name;
+        uint256 marks;
+    }
+
+    // Array to store student records
+    Student[] public students;
+
+    // Add a new student
+    function addStudent(
+        uint256 _rollNo,
+        string memory _name,
+        uint256 _marks
+    ) public {
+        students.push(Student(_rollNo, _name, _marks));
+    }
+
+    // Get student details using index
+    function getStudent(uint256 index)
+        public
+        view
+        returns (uint256, string memory, uint256)
+    {
+        require(index < students.length, "Invalid student index");
+
+        Student memory s = students[index];
+
+        return (s.rollNo, s.name, s.marks);
+    }
+
+    // Get total number of students
+    function getStudentCount() public view returns (uint256) {
+        return students.length;
+    }
+}
