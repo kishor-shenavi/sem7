@@ -1,0 +1,166 @@
+CELL 1
+print("Hello")
+
+CELL 2
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns 
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+
+from sklearn.neural_network import MLPClassifier
+
+from sklearn.metrics import (accuracy_score, confusion_matrix , classification_report)
+
+CELL 3
+df = pd.read_csv('Churn_Modelling.csv') 
+df.head()
+
+CELL 4
+df.shape
+
+CELL 5
+df.isnull().sum()
+
+CELL 6
+df.info()
+
+CELL 7
+df.describe()
+
+CELL 8
+df['Exited'].value_counts()
+
+CELL 9
+df.columns
+
+CELL 10
+df.drop(columns=['RowNumber' , 'CustomerId' , 'Surname'] , inplace=True)
+
+CELL 11
+df.columns
+
+CELL 12
+X = df.drop('Exited' , axis=1) 
+
+y = df['Exited'] 
+
+print("Features : ") 
+
+print(X.head()) 
+
+
+print("Target :") 
+
+print(y.value_counts())
+
+CELL 13
+df.head()
+
+CELL 14
+df['Geography'].value_counts()
+
+CELL 15
+#print(X.columns.tolist())
+
+X = pd.get_dummies(
+    X , 
+    columns=['Geography' , 'Gender'],
+    drop_first=True , 
+    dtype=int
+)
+
+print("Encoded Features") 
+print(X.head()) 
+
+print("New dataset Shape : " , X.shape)
+
+CELL 16
+X_train , X_test , y_train , y_test = train_test_split(X , y , test_size=0.2 , random_state=42 ,    stratify=y ) 
+
+print("Training Shape : " , X_train.shape) 
+
+print("Test Shape : " , y_test.shape)
+
+CELL 17
+scaler = StandardScaler() 
+
+
+
+X_train_scaled = scaler.fit_transform(X_train) 
+
+X_test_scaled = scaler.transform(X_test)
+
+print("Scaled Training Shape : " , X_train_scaled.shape) 
+
+print("Scaled Test Shape : " , X_test_scaled.shape)
+
+CELL 18
+model = MLPClassifier(
+    hidden_layer_sizes=(16,8),
+    activation='relu',
+    solver='adam',
+    max_iter=300,
+    random_state=42
+)
+
+print("Neural Network created succesfully")
+
+CELL 19
+model.fit(X_train_scaled , y_train) 
+
+y_pred = model.predict(X_test_scaled) 
+
+print("Actual Values:")
+print(y_test.values[:10])
+
+print("\nPredicted Values:")
+print(y_pred[:10])
+
+CELL 20
+accuracy = accuracy_score(y_test , y_pred)  
+
+
+print("accuracy_score : " , accuracy*100)
+
+CELL 21
+cm = confusion_matrix(y_test, y_pred)
+
+print("Confusion Matrix:")
+print(cm)
+
+# Visualize confusion matrix
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    cm,
+    annot=True,
+    fmt='d',
+    cmap='Blues',
+    xticklabels=['Stay', 'Churn'],
+    yticklabels=['Stay', 'Churn']
+)
+
+plt.title("Bank Customer Churn - Confusion Matrix")
+
+plt.xlabel("Predicted")
+
+plt.ylabel("Actual")
+
+plt.show()
+
+CELL 22
+print("Classification Report:")
+
+print(
+    classification_report(
+        y_test,
+        y_pred,
+        target_names=['Stay', 'Churn']
+    )
+)
+
+CELL 23

@@ -1,0 +1,133 @@
+CELL 1
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
+
+CELL 2
+df = pd.read_csv('sales_data_sample.csv' , encoding='unicode_escape' )
+
+df.head()
+
+CELL 3
+df.shape
+
+CELL 4
+df.info()
+
+CELL 5
+print("\nMissing Values:")
+print(df.isnull().sum())
+
+print("\nStatistical Summary:")
+print(df.describe())
+
+CELL 6
+df.dropna(subset=['CUSTOMERNAME'] , inplace=True)
+
+CELL 7
+print(df.shape)
+
+
+df['CUSTOMERNAME'].value_counts()
+
+CELL 8
+customer_data = df.groupby('CUSTOMERNAME').agg({
+    'SALES': 'sum',
+    'QUANTITYORDERED': 'sum',
+    'PRICEEACH': 'mean',
+    'ORDERNUMBER': 'nunique'
+})
+
+customer_data.columns = [
+    'Total_Sales',
+    'Total_Quantity',
+    'Average_Price',
+    'Total_Orders'
+]
+
+print(customer_data.head())
+print("\nCustomer Dataset Shape:", customer_data.shape)
+
+CELL 9
+scaler = StandardScaler() 
+
+X_scaled = scaler.fit_transform(customer_data) 
+
+print("Scaled Data") 
+print(X_scaled[:5])
+
+CELL 10
+wcss = [] 
+
+for i in range (1,11) :
+
+    kmeans = KMeans(
+        n_clusters=i,
+        random_state=42,
+        n_init=10
+    )
+
+    kmeans.fit(X_scaled) 
+
+    wcss.append(kmeans.inertia_)
+
+
+plt.plot(range(1,11) , wcss , marker='o') 
+plt.title("Elbow Method")
+plt.xlabel("Number of Cluster (k)")
+plt.ylabel("WCSS")
+plt.grid() 
+plt.show()
+
+CELL 11
+k = 3 
+
+kmeans = KMeans(
+    n_clusters=k,
+    random_state=42,
+    n_init=10
+
+)
+
+customer_data['Cluster'] = kmeans.fit_predict(X_scaled) 
+
+print("Customer Data Cluster :" , customer_data.head(10)) 
+
+
+# print("Customer Cluster Count :" , customer_data['Cluster'].value_counts())
+
+CELL 12
+print("Customer Cluster Count :" , customer_data['Cluster'].value_counts())
+
+CELL 13
+pca = PCA(n_components=2)
+
+X_pca = pca.fit_transform(X_scaled)
+
+
+
+plt.figure(figsize=(8, 5))
+
+sns.scatterplot(
+    x=X_pca[:, 0],
+    y=X_pca[:, 1],
+    hue=customer_data['Cluster'],
+    palette='viridis',
+    s=60
+)
+
+plt.title('Customer Segmentation using K-Means')
+plt.xlabel('Principal Component 1')
+plt.ylabel('Principal Component 2')
+plt.legend(title='Cluster')
+plt.show()
+
+CELL 14
+print(customer_data.groupby('Cluster').mean())
+
+CELL 15

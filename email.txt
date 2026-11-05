@@ -1,0 +1,232 @@
+CELL 1
+print("Hello World")
+
+CELL 2
+import pandas as pd 
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+
+
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    classification_report,
+    confusion_matrix
+)
+
+CELL 3
+#Load the data
+
+df = pd.read_csv('emails.csv') 
+
+df.head()
+
+CELL 4
+df.shape
+
+CELL 5
+df.info()
+
+CELL 6
+df.dtypes
+
+CELL 7
+df.describe()
+
+CELL 8
+df.isnull().sum().sum()
+
+CELL 9
+df.columns.to_list()[-10:]
+
+CELL 10
+#Preprocessing 
+
+df.drop(columns=['Email No.']  , inplace=True)
+
+CELL 11
+df.drop_duplicates(inplace=True)
+
+CELL 12
+target = 'Prediction'
+
+X = df.drop(columns=target) 
+y = df[target]
+
+X = X.select_dtypes(include=np.number)
+
+print("Feature Shape : " , X.shape) 
+print("Target Shape : " , y.shape) 
+
+
+print("\nClass Distribution:")
+print(y.value_counts())
+
+CELL 13
+plt.figure(figsize=(6, 4))
+
+sns.countplot(x=y)
+
+plt.title("Spam vs Not Spam Email Distribution")
+
+plt.xlabel("Email Class")
+
+plt.ylabel("Count")
+
+plt.xticks([0, 1], ['Not Spam', 'Spam'])
+
+plt.show()
+
+CELL 14
+X_train , X_test , y_train , y_test = train_test_split(X , y , random_state=42 , test_size=0.2) 
+
+print("Train Size : " , X_train.shape) 
+print("Test Size : " , X_test.shape)
+
+CELL 15
+scaler = StandardScaler() 
+
+X_train_scaled = scaler.fit_transform(X_train)
+
+X_test_scaled = scaler.transform(X_test) 
+
+print("Feature scaling completed" ) 
+
+print("Scaled Train Size : " , X_train_scaled.shape) 
+print("Scaled Test Size : " , X_test_scaled.shape)
+
+CELL 16
+knn = KNeighborsClassifier(n_neighbors=5) 
+
+knn.fit(X_train_scaled , y_train)
+
+knn_pred = knn.predict(X_test_scaled) 
+
+knn_accuracy = accuracy_score(y_test , knn_pred)
+
+print("Accuracy Score : " , knn_accuracy*100 ) 
+
+
+print("\nClassification Report:")
+
+print(classification_report(y_test, knn_pred))
+
+CELL 17
+svm = SVC(kernel='linear') 
+
+svm.fit(X_train_scaled , y_train) 
+
+svm_pred = svm.predict(X_test_scaled) 
+
+
+svm_accuracy = accuracy_score(y_test , svm_pred) 
+
+
+print("accuracy_score :" , svm_accuracy) 
+
+print("classification_report")
+print(classification_report(y_test , svm_pred))
+
+CELL 18
+results = pd.DataFrame({
+    'Model': ['KNN', 'SVM'],
+
+    'Accuracy': [
+        accuracy_score(y_test, knn_pred),
+        accuracy_score(y_test, svm_pred)
+    ],
+
+    'Precision': [
+        precision_score(y_test, knn_pred, zero_division=0),
+        precision_score(y_test, svm_pred, zero_division=0)
+    ],
+
+    'Recall': [
+        recall_score(y_test, knn_pred, zero_division=0),
+        recall_score(y_test, svm_pred, zero_division=0)
+    ],
+
+    'F1 Score': [
+        f1_score(y_test, knn_pred, zero_division=0),
+        f1_score(y_test, svm_pred, zero_division=0)
+    ]
+})
+
+print(results)
+
+# Identify best model based on accuracy
+best_model = results.loc[results['Accuracy'].idxmax()]
+
+print("\nBest Model:", best_model['Model'])
+
+CELL 19
+# KNN Confusion Matrix
+cm_knn = confusion_matrix(y_test, knn_pred)
+
+# SVM Confusion Matrix
+cm_svm = confusion_matrix(y_test, svm_pred)
+
+# Plot KNN
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    cm_knn,
+    annot=True,
+    fmt='d',
+    cmap='coolwarm'
+)
+
+plt.title("KNN Confusion Matrix")
+
+plt.xlabel("Predicted")
+
+plt.ylabel("Actual")
+
+plt.show()
+
+
+# Plot SVM
+plt.figure(figsize=(6, 4))
+
+sns.heatmap(
+    cm_svm,
+    annot=True,
+    fmt='d',
+    cmap='Greens'
+)
+
+plt.title("SVM Confusion Matrix")
+
+plt.xlabel("Predicted")
+
+plt.ylabel("Actual")
+
+plt.show()
+
+CELL 20
+results.set_index('Model').plot(
+    kind='bar',
+    figsize=(10, 5)
+)
+
+plt.title("KNN vs SVM Performance Comparison")
+
+plt.ylabel("Score")
+
+plt.ylim(0, 1)
+
+plt.xticks(rotation=0)
+
+plt.legend(loc='lower right')
+
+plt.show()
+
+CELL 21
